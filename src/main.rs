@@ -1,15 +1,18 @@
-use winapi::{um::{winnt::{MEM_COMMIT, PAGE_EXECUTE_READWRITE, RtlCopyMemory}, minwinbase::LPTHREAD_START_ROUTINE}, shared::minwindef::LPVOID};
+use winapi::{um::{winnt::{MEM_COMMIT, PAGE_EXECUTE_READWRITE, RtlCopyMemory}, minwinbase::LPTHREAD_START_ROUTINE}, shared::{minwindef::LPVOID, basetsd::SIZE_T, ntdef::HANDLE}};
 use winapi::um::memoryapi;
 use winapi::um::processthreadsapi;
 use winapi::um::synchapi;
 use winapi::um::handleapi;
 fn main(){
     let shellcode : [u8; 4] = [0xDE, 0xAD, 0xBE, 0xEF];
+    let shellcast: SIZE_T = unsafe {
+        std::mem::transmute(shellcode.len())
+    };
     let address: LPVOID =
     unsafe {
         memoryapi::VirtualAlloc(
             std::ptr::null_mut(), 
-            shellcode.len(), 
+            shellcast, 
             MEM_COMMIT, 
             PAGE_EXECUTE_READWRITE) 
     };
@@ -20,7 +23,7 @@ fn main(){
     let thread_start_routine: LPTHREAD_START_ROUTINE = unsafe {
         std::mem::transmute(address)
     };
-    let thread_handle;
+    let thread_handle: HANDLE;
     unsafe{
         thread_handle = processthreadsapi::CreateThread(
             std::ptr::null_mut(), 
@@ -30,8 +33,9 @@ fn main(){
             0, 
             std::ptr::null_mut());
     };
+    let inf = -1i32 as u32;
     unsafe{
-        synchapi::WaitForSingleObject(thread_handle, u32::MAX);
+        synchapi::WaitForSingleObject(thread_handle,inf);
         handleapi::CloseHandle(thread_handle);
     }
     
