@@ -4,6 +4,7 @@ use winapi::um::processthreadsapi;
 use winapi::um::synchapi;
 use winapi::um::handleapi;
 fn main(){
+    //add shellcode here to execute :)
     let shellcode : [u8; 4] = [0xDE, 0xAD, 0xBE, 0xEF];
     let shellcast: SIZE_T = unsafe {
         std::mem::transmute(shellcode.len())
